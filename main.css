@@ -5,7 +5,7 @@ img {
 
 .game
 {
-    width: 1080px;
+    max-width: 1080px;
     border: solid 1px #ddd;
     margin: 0 auto;
     background: #0000ff4d;
@@ -87,7 +87,8 @@ img {
 
 .game .status
 {
-    width: 480px;
+    width: 72%;
+    max-width: 480px;
     background: #fff8d4;
     border-radius: 10px;
     padding: 5px 20px;
@@ -97,13 +98,13 @@ img {
 
 
 .players{
-    width: 960px;
     margin: 0 auto;
     text-align: center;
 }
 
 .player{
-    width: 50%;
+    width: 80%;
+    max-width: 480px;
     border: solid 1px #f5f5f5;
     border-radius: 10px;
     padding: 10px;
@@ -141,5 +142,6 @@ img {
     vertical-align: top;
     background:#f5f5f5;
     display: none;
-    width: 480px;
+    width: 80%;
+    max-width: 480px;
 }
