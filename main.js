@@ -8,6 +8,7 @@ var wonTricks = 0;
 var better = null;
 var challenger = null;
 var deals = 0;
+var dealer = 2;
 
 var delay = ( function() {
     var timer = 0;
@@ -47,6 +48,30 @@ function createPlayers(num)
     }
 }
 
+function make_bet_button(name, val, player_id)
+{
+    var input_bet = document.createElement('input')
+    input_bet.type = 'button';
+    input_bet.id = 'bet_' + name + '_' + player_id;
+    input_bet.className = 'btn';
+    input_bet.value = val;
+    input_bet.player = players[player_id];
+    // input_bet.onclick = do_bet;
+    return input_bet
+}
+
+function make_bet_div(player_id)
+{
+    var div_bets = document.createElement('div');
+    div_bets.className = 'bet-options';
+    var input_bet_half = make_bet_button('half', 0.5, player_id);
+    var input_bet_one = make_bet_button('one', 1, player_id);
+    var input_bet_two = make_bet_button('two', 2, player_id);
+    div_bets.appendChild(input_bet_half);
+    div_bets.appendChild(input_bet_one);
+    div_bets.appendChild(input_bet_two);
+    return div_bets;
+}
 function createPlayersUI()
 {
     document.getElementById('players').innerHTML = '';
@@ -56,6 +81,7 @@ function createPlayersUI()
         var div_playerid = document.createElement('div');
         var div_hand = document.createElement('div');
         var div_points = document.createElement('div');
+        var div_bets = make_bet_div(i);
 
         div_points.className = 'points';
         div_points.id = 'points_' + i;
@@ -64,10 +90,13 @@ function createPlayersUI()
         div_player.className = 'player';
         div_hand.id = 'hand_' + i;
 
+
         div_playerid.innerHTML = 'Player ' + players[i].ID;
         div_player.appendChild(div_playerid);
         div_player.appendChild(div_hand);
+        div_player.appendChild(div_bets);
         div_player.appendChild(div_points);
+
         document.getElementById('players').appendChild(div_player);
     }
 }
@@ -107,6 +136,11 @@ function startCandy()
 
 function newRound()
 {
+    document.getElementById('player_' + dealer).classList.remove('active');
+    dealer = (dealer + 1) % 3;
+    document.getElementById('player_' + dealer).classList.add('active');
+
+    document.getElementById('status')
     document.getElementById('status').innerHTML = '';
     document.getElementById("status").style.display = '';
     deals = 0;

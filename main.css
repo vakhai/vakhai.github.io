@@ -8,17 +8,18 @@ img {
     width: 1080px;
     border: solid 1px #ddd;
     margin: 0 auto;
-   background: #3ac7fe;
-border: solid 10px;
-text-align:center;
-min-height:430px;
+    background: #3ac7fe;
+    border: solid 15px;
+    text-align:center;
+    min-height:430px;
 }
 
 .btn{
     border:none;
     padding: 10px 30px;
-    border-radius:10px;
+    border-radius: 10px;
     cursor:pointer;
+    margin: 5px;
 }
 
 .btn:hover{
@@ -41,6 +42,12 @@ padding: 20px;
 {
 text-align:center;
 }
+
+.game .bet-options
+{
+    text-align:center;
+}
+
 .game .card{
     width: 50px;
     height: 80px;
@@ -121,5 +128,4 @@ text-align:center;
 {
     background:#222;
     color:white !important;
-    border-radius:0px;
 }
