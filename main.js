@@ -4,11 +4,17 @@ var weights = {"J": 11, "Q": 12, "K": 13, "A": 14};
 var deck = new Array();
 var players = new Array();
 var trickCards = [];
+var deals = 0;
+var dealer = 2;
+
+var tricks = null;
 var wonTricks = 0;
 var better = null;
 var challenger = null;
-var deals = 0;
-var dealer = 2;
+var maxBet = 0;
+var bets = {};
+var currentBetter = dealer;
+
 
 var delay = ( function() {
     var timer = 0;
@@ -48,15 +54,16 @@ function createPlayers(num)
     }
 }
 
-function make_bet_button(name, val, player_id)
+function make_bet_button(name, bet, player_id)
 {
     var input_bet = document.createElement('input')
     input_bet.type = 'button';
     input_bet.id = 'bet_' + name + '_' + player_id;
     input_bet.className = 'btn';
-    input_bet.value = val;
-    input_bet.player = players[player_id];
-    // input_bet.onclick = do_bet;
+    input_bet.value = name;
+    input_bet.bet = bet;
+    input_bet.player = player_id;
+    input_bet.onclick = doBet;
     return input_bet
 }
 
@@ -64,14 +71,43 @@ function make_bet_div(player_id)
 {
     var div_bets = document.createElement('div');
     div_bets.className = 'bet-options';
-    var input_bet_half = make_bet_button('half', 0.5, player_id);
-    var input_bet_one = make_bet_button('one', 1, player_id);
-    var input_bet_two = make_bet_button('two', 2, player_id);
+    div_bets.id = 'bets_' + player_id;
+    var input_bet_skip = make_bet_button('Pass', 0, player_id);
+    var input_bet_half = make_bet_button('Half', 0.5, player_id);
+    var input_bet_one = make_bet_button('One', 1, player_id);
+    var input_bet_two = make_bet_button('Two', 2, player_id);
+    div_bets.appendChild(input_bet_skip);
     div_bets.appendChild(input_bet_half);
     div_bets.appendChild(input_bet_one);
     div_bets.appendChild(input_bet_two);
     return div_bets;
 }
+
+function make_challenge_button(player_id, challenge_id)
+{
+    var input_challenge = document.createElement('input');
+    input_challenge.type = 'button';
+    input_challenge.id = 'challenge_' + name + '_' + player_id;
+    input_challenge.className = 'btn';
+    input_challenge.value = 'Challenge ' + (challenge_id + 1);
+    input_challenge.player = player_id;
+    input_challenge.challenger = challenge_id;
+    input_challenge.onclick = doChallenge;
+    return input_challenge;
+}
+
+function make_challenge_div(player_id)
+{
+    var div_challenges = document.createElement('div');
+    div_challenges.className = 'challenge-options';
+    div_challenges.id = 'challenges_' + player_id;
+    var challenge_1 = make_challenge_button(player_id, (player_id + 1) % 3);
+    var challenge_2 = make_challenge_button(player_id, (player_id + 2) % 3);
+    div_challenges.appendChild(challenge_1);
+    div_challenges.appendChild(challenge_2);
+    return div_challenges;
+}
+
 function createPlayersUI()
 {
     document.getElementById('players').innerHTML = '';
@@ -82,6 +118,7 @@ function createPlayersUI()
         var div_hand = document.createElement('div');
         var div_points = document.createElement('div');
         var div_bets = make_bet_div(i);
+        var div_challenge = make_challenge_div(i);
 
         div_points.className = 'points';
         div_points.id = 'points_' + i;
@@ -94,6 +131,7 @@ function createPlayersUI()
         div_playerid.innerHTML = 'Player ' + players[i].ID;
         div_player.appendChild(div_playerid);
         div_player.appendChild(div_hand);
+        div_player.appendChild(div_challenge);
         div_player.appendChild(div_bets);
         div_player.appendChild(div_points);
 
@@ -108,6 +146,10 @@ function clearPlayers()
         players[i].Hand = new Array();
         var hand = document.getElementById('hand_' + i);
         hand.innerHTML = '';
+        var div_bets = document.getElementById('bets_' + i);
+        div_bets.childNodes.forEach((child) => child.style = "");
+        var div_challenges = document.getElementById('challenges_' + i);
+        div_challenges.childNodes.forEach((child) => child.style = "");
     }
 }
 
@@ -136,13 +178,15 @@ function startCandy()
 
 function newRound()
 {
-    document.getElementById('player_' + dealer).classList.remove('active');
+    // document.getElementById('player_' + dealer).classList.remove('active');
     dealer = (dealer + 1) % 3;
-    document.getElementById('player_' + dealer).classList.add('active');
+    currentBetter = dealer;
+    // document.getElementById('player_' + dealer).classList.add('active');
 
-    document.getElementById('status')
-    document.getElementById('status').innerHTML = '';
-    document.getElementById("status").style.display = '';
+    // setStatus
+    // document.getElementById('status')
+    // document.getElementById('status').innerHTML = '';
+    // document.getElementById("status").style.display = '';
     deals = 0;
     createDeck();
     shuffle();
@@ -153,12 +197,18 @@ function nextDeal() {
     clearPlayers();
     clearTrick();
     wonTricks = 0;
+    better = challenger = null;
+    maxBet = 0;
+    bets = {};
+    currentBetter = dealer;
     if (deals < 2)
-        dealHands(4);
+        tricks = 4;
     else
-        dealHands(2);
+        tricks = 2;
+    dealHands(tricks);
     updateDeck();
     deals += 1;
+    setStatusBetting(currentBetter);
 }
 
 function dealHands(num)
@@ -199,18 +249,71 @@ function clearTrick()
     trick.innerHTML = '';
     trick.style.background = '#f5f5f5';
     trickCards = [];
-    better = challenger = null;
 }
 
+function doneBetting()
+{
+    if (maxBet !== 0)
+    {
+        document.getElementById('player_' + better).classList.add('active');
+        setStatusChallenging();
+    }
+    else
+        nextDeal();
+}
+
+function doBet()
+{
+    if ((this.player === currentBetter) && ((this.bet > maxBet) || (this.bet === 0))){
+        this.style.background = '#8cfc70';
+        this.style.color = 'black';
+        bets[currentBetter] = this.bet;
+        if (this.bet > maxBet) {
+            maxBet = this.bet;
+            better = currentBetter;
+            if (maxBet === 2)
+            {
+                doneBetting();
+                return
+            }
+        }
+
+        // document.getElementById('player_' + currentBetter).classList.remove('active');
+        // Find next player to bet
+        currentBetter = (currentBetter + 1) % 3;
+        if ((currentBetter in bets) && ((bets[currentBetter] === 0) || (bets[currentBetter] === maxBet)))
+        {
+            currentBetter = (currentBetter + 1) % 3;
+            if ((currentBetter in bets) && ((bets[currentBetter] === 0) || (bets[currentBetter] === maxBet)))
+            {
+                // None left to bet
+                doneBetting();
+                return
+            }
+        }
+        setStatusBetting(currentBetter);
+    }
+
+}
+
+function doChallenge()
+{
+    if (this.player === better) {
+        this.style.background = '#8cfc70';
+        this.style.color = 'black';
+        challenger = this.challenger
+        setStatusTrick(better);
+    }
+}
 
 function playCard()
 {
-    if (trickCards.length == 0)
-        better = players[this.player];
-    else if (trickCards.length == 1)
-        challenger = players[this.player];
-    else
-        return
+    if ((trickCards.length == 0) && (this.player !== better))
+        return;
+    else if ((trickCards.length == 1) && (this.player != challenger))
+        return;
+    else if (trickCards.length >= 2)
+        return;
 
     var trick = document.getElementById('trick');
     trick.appendChild(this);
@@ -220,14 +323,15 @@ function playCard()
             trick.style.background = '#8cfc70';
             wonTricks += 1;
             console.log(wonTricks);
-            if (wonTricks === 4) {
-                better.Points += 1;
-                end(better);
+            if (wonTricks === tricks) {
+                players[better].Points += maxBet;
+                setStatusWinner(better);
                 delay(function(){
                     newRound();
                 }, 3000);
             }
             else {
+                setStatusTrick(better);
                 delay(function(){
                     clearTrick();
                 }, 1000);
@@ -235,13 +339,15 @@ function playCard()
         }
         else {
             trick.style.background = '#f85656';
-            better.Points -= 2;
-            end(challenger);
+            players[better].Points -= 2*maxBet;
+            setStatusWinner(challenger);
             delay(function(){
                 newRound();
             }, 3000);
         }
     }
+    else
+        setStatusTrick(challenger);
 }
 
 function checkWon()
@@ -257,10 +363,40 @@ function updatePoints()
     }
 }
 
-function end(winner)
+function resetActive(){
+    for (var i =0; i < players.length; i++){
+        document.getElementById('player_' + i).classList.remove('active');
+    }
+}
+
+function setStatusWinner(winner)
 {
+    document.getElementById('status').innerHTML = 'Winner: Player ' + players[winner].ID;
+    document.getElementById("status").style.display = 'block';
     updatePoints();
-    document.getElementById('status').innerHTML = 'Winner: Player ' + winner.ID;
+}
+
+function setStatusBetting(currentBetter)
+{
+    resetActive();
+    document.getElementById('player_' + currentBetter).classList.add('active');
+    document.getElementById('status').innerHTML = 'Start Betting: Player ' + players[currentBetter].ID;
+    document.getElementById("status").style.display = 'block';
+}
+
+function setStatusChallenging()
+{
+    resetActive();
+    document.getElementById('player_' + better).classList.add('active');
+    document.getElementById('status').innerHTML = 'Select Challenger: Player ' + players[better].ID;
+    document.getElementById("status").style.display = 'block';
+}
+
+function setStatusTrick(currentPlayer)
+{
+    resetActive();
+    document.getElementById('player_' + currentPlayer).classList.add('active');
+    document.getElementById('status').innerHTML = 'Play Card: Player ' + players[currentPlayer].ID;
     document.getElementById("status").style.display = 'block';
 }
 
