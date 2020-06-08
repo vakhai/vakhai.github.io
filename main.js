@@ -97,7 +97,7 @@ function make_challenge_button(player_id, challenge_id)
 {
     var input_challenge = document.createElement('input');
     input_challenge.type = 'button';
-    input_challenge.id = 'challenge_' + name + '_' + player_id;
+    input_challenge.id = 'challenge_' + challenge_id + '_' + player_id;
     input_challenge.className = 'btn';
     input_challenge.value = 'Challenge ' + names[challenge_id];
     input_challenge.player = player_id;
@@ -412,7 +412,7 @@ function setStatusBetting(currentBetter)
     resetActive();
     var currentBets = getBets();
     document.getElementById('player_' + currentBetter).classList.add('active');
-    document.getElementById('status').innerHTML = 'Start Betting: ' + players[currentBetter].ID + '<br>' + currentBets.join(' ');
+    document.getElementById('status').innerHTML = `Start Betting:  ${players[currentBetter].ID}<br>${currentBets.join(' ')}`;
     document.getElementById("status").style.display = 'block';
     document.getElementById('bets_' + currentBetter).style.display = 'block'
 }
@@ -422,7 +422,7 @@ function setStatusChallenging()
     resetActive();
     var currentBets = getBets();
     document.getElementById('player_' + better).classList.add('active');
-    document.getElementById('status').innerHTML = 'Select Challenger: ' + players[better].ID + '<br>' + currentBets.join(' ');
+    document.getElementById('status').innerHTML = `Select Challenger: ${players[better].ID}<br>${currentBets.join(' ')}`;
     document.getElementById("status").style.display = 'block';
     document.getElementById('challenges_' + better).style.display = 'block'
 }
@@ -431,7 +431,7 @@ function setStatusTrick(currentPlayer)
 {
     resetActive();
     document.getElementById('player_' + currentPlayer).classList.add('active');
-    document.getElementById('status').innerHTML = 'Play Card: ' + players[currentPlayer].ID;
+    document.getElementById('status').innerHTML = `Play Card: ${players[currentPlayer].ID}<br>${players[better].ID} vs ${players[challenger].ID}`;
     document.getElementById("status").style.display = 'block';
 }
 
