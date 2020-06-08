@@ -7,6 +7,7 @@ var trickCards = [];
 var wonTricks = 0;
 var better = null;
 var challenger = null;
+var deals = 0;
 
 var delay = ( function() {
     var timer = 0;
@@ -23,6 +24,8 @@ function createDeck()
     {
         for(var x = 0; x < suits.length; x++)
         {
+            if (values[i] == "7" && (suits[x] == "S" || suits[x] == "C"))
+                continue;
             if (values[i] == "J" || values[i] == "Q" || values[i] == "K" || values[i] == "A")
                 var weight = weights[values[i]];
             else
@@ -56,6 +59,7 @@ function createPlayersUI()
 
         div_points.className = 'points';
         div_points.id = 'points_' + i;
+        div_points.innerHTML = "0";
         div_player.id = 'player_' + i;
         div_player.className = 'player';
         div_hand.id = 'hand_' + i;
@@ -96,8 +100,6 @@ function shuffle()
 function startCandy()
 {
     document.getElementById('btnStart').value = 'Restart';
-    document.getElementById("status").style.display="none";
-
     createPlayers(3);
     createPlayersUI();
     newRound();
@@ -107,12 +109,22 @@ function newRound()
 {
     document.getElementById('status').innerHTML = '';
     document.getElementById("status").style.display = '';
-    clearPlayers();
-    clearTrick();
+    deals = 0;
     createDeck();
     shuffle();
-    dealHands(4);
+    nextDeal();
+}
+
+function nextDeal() {
+    clearPlayers();
+    clearTrick();
+    wonTricks = 0;
+    if (deals < 2)
+        dealHands(4);
+    else
+        dealHands(2);
     updateDeck();
+    deals += 1;
 }
 
 function dealHands(num)
@@ -156,6 +168,7 @@ function clearTrick()
     better = challenger = null;
 }
 
+
 function playCard()
 {
     if (trickCards.length == 0)
@@ -174,7 +187,6 @@ function playCard()
             wonTricks += 1;
             console.log(wonTricks);
             if (wonTricks === 4) {
-                wonTricks = 0;
                 better.Points += 1;
                 end(better);
                 delay(function(){
@@ -190,7 +202,6 @@ function playCard()
         else {
             trick.style.background = '#f85656';
             better.Points -= 2;
-            wonTricks = 0;
             end(challenger);
             delay(function(){
                 newRound();
@@ -216,7 +227,7 @@ function end(winner)
 {
     updatePoints();
     document.getElementById('status').innerHTML = 'Winner: Player ' + winner.ID;
-    document.getElementById("status").style.display = "inline-block";
+    document.getElementById("status").style.display = 'block';
 }
 
 function updateDeck()
