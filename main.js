@@ -16,9 +16,10 @@ var bets = {};
 var currentBetter = dealer;
 
 var socket;
-var connected = 0;
-const uuid = make_uuid();
-var clients = [uuid];
+var connected;
+var uuid;
+var clients;
+var names;
 
 var delay = ( function() {
     var timer = 0;
@@ -58,7 +59,7 @@ function createPlayers(num)
     for(var i = 1; i <= num; i++)
     {
         var hand = new Array();
-        var player = { Name: 'Player ' + i, ID: i, Points: 0, Hand: hand };
+        var player = { Name: 'Player ' + i, ID: names[i-1], Points: 0, Hand: hand };
         players.push(player);
     }
 }
@@ -98,7 +99,7 @@ function make_challenge_button(player_id, challenge_id)
     input_challenge.type = 'button';
     input_challenge.id = 'challenge_' + name + '_' + player_id;
     input_challenge.className = 'btn';
-    input_challenge.value = 'Challenge ' + (challenge_id + 1);
+    input_challenge.value = 'Challenge ' + names[challenge_id];
     input_challenge.player = player_id;
     input_challenge.challenger = challenge_id;
     input_challenge.onclick = () => sendButtonClick(input_challenge.id);
@@ -123,29 +124,32 @@ function createPlayersUI()
     for(var i = 0; i < players.length; i++)
     {
         var div_player = document.createElement('div');
-        var div_playerid = document.createElement('div');
+        if (clients[i] !== uuid)
+            div_player.style.display = 'none'
+        div_player.id = 'player_' + i;
+        div_player.className = 'player';
+
+        var div_playerlabel = document.createElement('div');
         var div_hand = document.createElement('div');
-        var div_points = document.createElement('div');
+
         var div_bets = make_bet_div(i);
         var div_challenge = make_challenge_div(i);
 
-        div_points.className = 'points';
-        div_points.id = 'points_' + i;
-        div_points.innerHTML = "0";
-        div_player.id = 'player_' + i;
-        div_player.className = 'player';
+        div_playerlabel.id = 'playerlabel_' + i;
+        div_playerlabel.innerHTML = players[i].ID;
         div_hand.id = 'hand_' + i;
 
+        div_bets.style.display = 'none'
+        div_challenge.style.display = 'none'
 
-        div_playerid.innerHTML = 'Player ' + players[i].ID;
-        div_player.appendChild(div_playerid);
+        div_player.appendChild(div_playerlabel);
         div_player.appendChild(div_hand);
         div_player.appendChild(div_challenge);
         div_player.appendChild(div_bets);
-        div_player.appendChild(div_points);
 
         document.getElementById('players').appendChild(div_player);
     }
+    updatePoints();
 }
 
 function clearPlayers()
@@ -179,7 +183,7 @@ function shuffle()
 
 function startCandy()
 {
-    document.getElementById('btnStart').value = 'Restart';
+    //document.getElementById('btnStart').value = 'Restart';
     createPlayers(3);
     createPlayersUI();
     newRound();
@@ -208,7 +212,6 @@ function nextDeal() {
     else
         tricks = 2;
     dealHands(tricks);
-    updateDeck();
     deals += 1;
     setStatusBetting(currentBetter);
 }
@@ -251,6 +254,7 @@ function clearTrick()
     var trick = document.getElementById('trick');
     trick.innerHTML = '';
     trick.style.background = '#f5f5f5';
+    trick.style.display = 'none';
     trickCards = [];
 }
 
@@ -323,6 +327,7 @@ function playCard(id)
 
     var trick = document.getElementById('trick');
     trick.appendChild(card);
+    trick.style.display = 'block';
     trickCards.push(card.card);
     if (trickCards.length == 2) {
         if (checkWon()){
@@ -363,21 +368,41 @@ function checkWon()
 
 function updatePoints()
 {
+    var scores = ["Scoreboard "];
     for (var i = 0 ; i < players.length; i++)
     {
-        document.getElementById('points_' + i).innerHTML = players[i].Points;
+        scores.push(players[i].ID + ":" + players[i].Points);
     }
+    document.getElementById('score').innerHTML = scores.join(" ");
 }
 
 function resetActive(){
     for (var i =0; i < players.length; i++){
         document.getElementById('player_' + i).classList.remove('active');
+        document.getElementById('bets_' + i).style.display = "none";
+        document.getElementById('challenges_' + i).style.display = "none";
     }
+}
+
+function getBets(){
+    currentBets = ["Bets "]
+    for (var i =0; i < players.length; i++){
+        if (i in bets)
+            currentBets.push(players[i].ID + ":" + bets[i]);
+    }
+    return currentBets
+}
+
+function setStatusConnected(names)
+{
+    document.getElementById('gameStatus').style.display = 'block';
+    document.getElementById('status').innerHTML = 'Connected: ' + names.join(', ');
+    document.getElementById("status").style.display = 'block';
 }
 
 function setStatusWinner(winner)
 {
-    document.getElementById('status').innerHTML = 'Winner: Player ' + players[winner].ID;
+    document.getElementById('status').innerHTML = 'Winner: ' + players[winner].ID;
     document.getElementById("status").style.display = 'block';
     updatePoints();
 }
@@ -385,36 +410,37 @@ function setStatusWinner(winner)
 function setStatusBetting(currentBetter)
 {
     resetActive();
+    var currentBets = getBets();
     document.getElementById('player_' + currentBetter).classList.add('active');
-    document.getElementById('status').innerHTML = 'Start Betting: Player ' + players[currentBetter].ID;
+    document.getElementById('status').innerHTML = 'Start Betting: ' + players[currentBetter].ID + '<br>' + currentBets.join(' ');
     document.getElementById("status").style.display = 'block';
+    document.getElementById('bets_' + currentBetter).style.display = 'block'
 }
 
 function setStatusChallenging()
 {
     resetActive();
+    var currentBets = getBets();
     document.getElementById('player_' + better).classList.add('active');
-    document.getElementById('status').innerHTML = 'Select Challenger: Player ' + players[better].ID;
+    document.getElementById('status').innerHTML = 'Select Challenger: ' + players[better].ID + '<br>' + currentBets.join(' ');
     document.getElementById("status").style.display = 'block';
+    document.getElementById('challenges_' + better).style.display = 'block'
 }
 
 function setStatusTrick(currentPlayer)
 {
     resetActive();
     document.getElementById('player_' + currentPlayer).classList.add('active');
-    document.getElementById('status').innerHTML = 'Play Card: Player ' + players[currentPlayer].ID;
+    document.getElementById('status').innerHTML = 'Play Card: ' + players[currentPlayer].ID;
     document.getElementById("status").style.display = 'block';
-}
-
-function updateDeck()
-{
-    document.getElementById('deckcount').innerHTML = deck.length;
 }
 
 function onConnect(msg)
 {
     connected += 1;
     clients.push(msg.id);
+    names.push(msg.name);
+    setStatusConnected(names);
     if (clients.length == 3){
         sendReady();
     }
@@ -426,6 +452,7 @@ function sendReady()
         type: "ready",
         text: "Ready to play!",
         clients: clients,
+        names: names,
         seed: uuid,
         date: Date.now(),
     };
@@ -437,9 +464,16 @@ function sendReady()
 function onReady(msg)
 {
     clients = msg.clients;
+    names = msg.names;
     Math.seedrandom(msg.seed);
-    console.log("Ready to play! Clients:")
+    console.log("Ready to play! Clients, Names")
     console.log(clients);
+    console.log(names);
+    var gameStart = document.getElementById("gameStart");
+    gameStart.style.display = "none";
+    var gameBody = document.getElementById("gameBody");
+    gameBody.style.display = "block";
+    startCandy();
 }
 
 function sendButtonClick(id)
@@ -472,8 +506,20 @@ function onButtonClick(msg)
         playCard(button.id)
 }
 
-window.addEventListener('load', function(){
-    socket = new WebSocket("wss://connect.websocket.in/v3/1?apiKey=JToMx67IYDvU5ulGDBW7ZXb1ECV3dCUfJ9f7T9wNBjUati3zMuiK4AcG9CAW");
+function start()
+{
+    var room = document.getElementById("room").value;
+    var name = document.getElementById("name").value;
+    uuid = make_uuid();
+    connected = 0;
+    clients = [];
+    names = [];
+
+    Math.seedrandom(room);
+    var channel = Math.floor(Math.random()*10000) + 1;
+    console.log("Channel " + channel);
+
+    socket = new WebSocket("wss://connect.websocket.in/v3/" + channel + "?apiKey=JToMx67IYDvU5ulGDBW7ZXb1ECV3dCUfJ9f7T9wNBjUati3zMuiK4AcG9CAW");
     socket.onopen = function(e) {
         console.log("[open] Connection established");
         console.log("Sending to server");
@@ -482,10 +528,12 @@ window.addEventListener('load', function(){
             type: "connect",
             text: "Connected",
             id: uuid,
+            name: name,
             date: Date.now()
         };
 
         socket.send(JSON.stringify(msg));
+        onConnect(msg)
     };
 
     socket.onmessage = function(event) {
@@ -507,4 +555,6 @@ window.addEventListener('load', function(){
             default:
         }
     };
+}
+window.addEventListener('load', function(){
 });
