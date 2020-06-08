@@ -5,6 +5,7 @@ img {
 
 .game
 {
+    width: 100%;
     max-width: 1080px;
     border: solid 1px #ddd;
     margin: 0 auto;
