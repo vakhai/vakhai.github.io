@@ -13,10 +13,10 @@
     
             <div class="game-body">
                 <div class="game-options">
-                    <input type="button" id="btnStart" class="btn" value="Start" onclick="startCandy()">
-                    <input type="button" id="btnNewRound" class="btn" value="New Round" onclick="newRound()">
-                    <input type="button" id="btnNextDeal" class="btn" value="Next Deal" onclick="nextDeal()">
-                    </div>
+                    <input type="button" id="btnStart" class="btn" value="Start" onclick="sendButtonClick(this.id)">
+                    <input type="button" id="btnNewRound" class="btn" value="New Round" onclick="sendButtonClick(this.id)">
+                    <input type="button" id="btnNextDeal" class="btn" value="Next Deal" onclick="sendButtonClick(this.id)">
+                </div>
 
             
                     <div id="deck" class="deck">
@@ -35,6 +35,8 @@
                     <div class="clear"></div>
             </div>
         </div>
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js">
+        </script>
         <script src="main.js" async defer></script>
     </body>
 </html>

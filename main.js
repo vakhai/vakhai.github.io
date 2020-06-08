@@ -15,6 +15,10 @@ var maxBet = 0;
 var bets = {};
 var currentBetter = dealer;
 
+var socket;
+var connected = 0;
+const uuid = make_uuid();
+var clients = [uuid];
 
 var delay = ( function() {
     var timer = 0;
@@ -23,6 +27,11 @@ var delay = ( function() {
         timer = setTimeout(callback, ms);
     };
 })();
+
+function make_uuid()
+{
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
 
 function createDeck()
 {
@@ -63,7 +72,7 @@ function make_bet_button(name, bet, player_id)
     input_bet.value = name;
     input_bet.bet = bet;
     input_bet.player = player_id;
-    input_bet.onclick = doBet;
+    input_bet.onclick = () => sendButtonClick(input_bet.id);
     return input_bet
 }
 
@@ -92,7 +101,7 @@ function make_challenge_button(player_id, challenge_id)
     input_challenge.value = 'Challenge ' + (challenge_id + 1);
     input_challenge.player = player_id;
     input_challenge.challenger = challenge_id;
-    input_challenge.onclick = doChallenge;
+    input_challenge.onclick = () => sendButtonClick(input_challenge.id);
     return input_challenge;
 }
 
@@ -178,15 +187,8 @@ function startCandy()
 
 function newRound()
 {
-    // document.getElementById('player_' + dealer).classList.remove('active');
     dealer = (dealer + 1) % 3;
     currentBetter = dealer;
-    // document.getElementById('player_' + dealer).classList.add('active');
-
-    // setStatus
-    // document.getElementById('status')
-    // document.getElementById('status').innerHTML = '';
-    // document.getElementById("status").style.display = '';
     deals = 0;
     createDeck();
     shuffle();
@@ -221,24 +223,25 @@ function dealHands(num)
         {
             var card = deck.pop();
             players[x].Hand.push(card);
-            renderCard(card, x);
+            renderCard(i, card, x);
         }
     }
 }
 
-function renderCard(card, player)
+function renderCard(name, card, player_id)
 {
-    var hand = document.getElementById('hand_' + player);
-    hand.appendChild(getCardUI(card, player));
+    var hand = document.getElementById('hand_' + player_id);
+    hand.appendChild(getCardUI(name, card, player_id));
 }
 
-function getCardUI(card, player)
+function getCardUI(name, card, player_id)
 {
     var el = document.createElement('div');
+    el.id = 'card_' + name + '_' + player_id
     el.className = 'card';
-    el.onclick = playCard;
+    el.onclick = () => sendButtonClick(el.id);
     el.card = card;
-    el.player = player;
+    el.player = player_id;
     el.innerHTML = `<img src='cards/${card.Value}${card.Suit}.svg'>`;
     return el;
 }
@@ -262,14 +265,15 @@ function doneBetting()
         nextDeal();
 }
 
-function doBet()
+function doBet(id)
 {
-    if ((this.player === currentBetter) && ((this.bet > maxBet) || (this.bet === 0))){
-        this.style.background = '#8cfc70';
-        this.style.color = 'black';
-        bets[currentBetter] = this.bet;
-        if (this.bet > maxBet) {
-            maxBet = this.bet;
+    var button = document.getElementById(id);
+    if ((button.player === currentBetter) && ((button.bet > maxBet) || (button.bet === 0))){
+        button.style.background = '#8cfc70';
+        button.style.color = 'black';
+        bets[currentBetter] = button.bet;
+        if (button.bet > maxBet) {
+            maxBet = button.bet;
             better = currentBetter;
             if (maxBet === 2)
             {
@@ -296,28 +300,30 @@ function doBet()
 
 }
 
-function doChallenge()
+function doChallenge(id)
 {
-    if (this.player === better) {
-        this.style.background = '#8cfc70';
-        this.style.color = 'black';
-        challenger = this.challenger
+    var button = document.getElementById(id);
+    if (button.player === better) {
+        button.style.background = '#8cfc70';
+        button.style.color = 'black';
+        challenger = button.challenger
         setStatusTrick(better);
     }
 }
 
-function playCard()
+function playCard(id)
 {
-    if ((trickCards.length == 0) && (this.player !== better))
+    var card = document.getElementById(id);
+    if ((trickCards.length == 0) && (card.player !== better))
         return;
-    else if ((trickCards.length == 1) && (this.player != challenger))
+    else if ((trickCards.length == 1) && (card.player != challenger))
         return;
     else if (trickCards.length >= 2)
         return;
 
     var trick = document.getElementById('trick');
-    trick.appendChild(this);
-    trickCards.push(this.card);
+    trick.appendChild(card);
+    trickCards.push(card.card);
     if (trickCards.length == 2) {
         if (checkWon()){
             trick.style.background = '#8cfc70';
@@ -405,8 +411,100 @@ function updateDeck()
     document.getElementById('deckcount').innerHTML = deck.length;
 }
 
+function onConnect(msg)
+{
+    connected += 1;
+    clients.push(msg.id);
+    if (clients.length == 3){
+        sendReady();
+    }
+}
+
+function sendReady()
+{
+    var msg = {
+        type: "ready",
+        text: "Ready to play!",
+        clients: clients,
+        seed: uuid,
+        date: Date.now(),
+    };
+
+    socket.send(JSON.stringify(msg));
+    onReady(msg)
+}
+
+function onReady(msg)
+{
+    clients = msg.clients;
+    Math.seedrandom(msg.seed);
+    console.log("Ready to play! Clients:")
+    console.log(clients);
+}
+
+function sendButtonClick(id)
+{
+    var msg = {
+        type: "button",
+        text: "Button Click!",
+        button: id,
+        date: Date.now(),
+    }
+    socket.send(JSON.stringify(msg));
+    onButtonClick(msg);
+}
+
+function onButtonClick(msg)
+{
+    console.log(msg);
+    var button = document.getElementById(msg.button);
+    if (button.id === "btnStart")
+        startCandy();
+    else if (button.id === "btnNewRound")
+        newRound();
+    else if (button.id === "btnNextDeal")
+        nextDeal();
+    else if (button.id.startsWith('bet_'))
+        doBet(button.id);
+    else if (button.id.startsWith('challenge_'))
+        doChallenge(button.id);
+    else if (button.id.startsWith('card_'))
+        playCard(button.id)
+}
+
 window.addEventListener('load', function(){
-    createDeck();
-    shuffle();
-    createPlayers(1);
+    socket = new WebSocket("wss://connect.websocket.in/v3/1?apiKey=JToMx67IYDvU5ulGDBW7ZXb1ECV3dCUfJ9f7T9wNBjUati3zMuiK4AcG9CAW");
+    socket.onopen = function(e) {
+        console.log("[open] Connection established");
+        console.log("Sending to server");
+
+        var msg = {
+            type: "connect",
+            text: "Connected",
+            id: uuid,
+            date: Date.now()
+        };
+
+        socket.send(JSON.stringify(msg));
+    };
+
+    socket.onmessage = function(event) {
+        var msg = JSON.parse(event.data);
+        console.log(`[message] Data received from server: ${msg.text}`);
+        switch(msg.type){
+            case "connect": {
+                onConnect(msg);
+                break;
+            }
+            case "ready": {
+                onReady(msg);
+                break;
+            }
+            case "button": {
+                onButtonClick(msg);
+                break;
+            }
+            default:
+        }
+    };
 });
