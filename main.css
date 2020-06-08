@@ -77,7 +77,8 @@ img {
 }
 
 .game .card{
-    width: 80px;
+    width: 20%;
+    max-width: 80px;
     border: solid 1px black;
     display: inline-block;
     border-radius: 5px;
