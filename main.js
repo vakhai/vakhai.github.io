@@ -365,7 +365,6 @@ function playCard(id)
     if (trickCards.length == 0)
         trick.innerHTML = ''
     trick.appendChild(card);
-    trick.style.display = 'block';
     trickCards.push(card.card);
     if (trickCards.length == 2) {
         if (checkWon()){
