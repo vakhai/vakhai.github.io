@@ -390,13 +390,13 @@ function playCard(id)
                 setStatusWinner(better);
                 delay(function(){
                     newRound();
-                }, 3000);
+                }, 4000);
             }
             else {
                 setStatusTrick(better);
                 delay(function(){
                     clearTrick();
-                }, 1000);
+                }, 2000);
             }
         }
         else {
@@ -405,7 +405,7 @@ function playCard(id)
             setStatusWinner(challenger);
             delay(function(){
                 newRound();
-            }, 3000);
+            }, 4000);
         }
     }
     else
@@ -457,7 +457,7 @@ function resetActive(){
 function setStatusConnected(names)
 {
     document.getElementById('gameStatus').style.display = 'block';
-    document.getElementById('status').innerHTML = 'Connected: ' + names.join(', ');
+    document.getElementById('status').innerHTML = 'Connected: ' + names.join(', ') + '<br>Waiting for other players';
     document.getElementById("status").style.display = 'inline-block';
 }
 
@@ -580,10 +580,14 @@ function onButtonClick(msg)
         playCard(button.id)
 }
 
-function start()
+function connect()
 {
     var room = document.getElementById("room").value;
     var name = document.getElementById("name").value;
+    document.getElementById("btnConnect").style.display = 'none';
+    document.getElementById("room").style.display = 'none';
+    document.getElementById("name").style.display = 'none';
+
     uuid = make_uuid();
     connected = 0;
     clients = [];
