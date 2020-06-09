@@ -283,7 +283,7 @@ function getCardUI(name, card, player_id)
     var el = document.createElement('div');
     el.id = 'card_' + name + '_' + player_id
     el.className = 'card';
-    el.onclick = () => sendButtonClick(el.id);
+    el.onclick = () => sendCardClick(el.id);
     el.card = card;
     el.player = player_id;
     el.innerHTML = `<img src='cards/${card.Value}${card.Suit}.svg'>`;
@@ -351,21 +351,30 @@ function doChallenge(id)
     if (button.player === better) {
         button.style.background = '#8cfc70';
         button.style.color = 'black';
-        challenger = button.challenger
+        challenger = button.challenger;
         setStatusTrick(better);
     }
 }
 
-function playCard(id)
+function checkPlayableCard(id)
 {
+    var playable = true;
+    if ((better === null) || (challenger === null))
+        playable = false;
     var card = document.getElementById(id);
     if ((trickCards.length == 0) && (card.player !== better))
-        return;
+        playable = false;
     else if ((trickCards.length == 1) && (card.player != challenger))
-        return;
+        playable = false;
     else if (trickCards.length >= 2)
-        return;
+        playable = false;
+    return playable
+}
 
+function playCard(id)
+{
+    if (!checkPlayableCard(id)) return;
+    var card = document.getElementById(id);
     var trick = document.getElementById('trick');
     if (trickCards.length == 0)
         trick.innerHTML = ''
@@ -545,6 +554,12 @@ function sendButtonClick(id)
     }
     socket.send(JSON.stringify(msg));
     onButtonClick(msg);
+}
+
+function sendCardClick(id)
+{
+    if (!checkPlayableCard(id)) return;
+    sendButtonClick(id);
 }
 
 function onButtonClick(msg)
