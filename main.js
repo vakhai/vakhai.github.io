@@ -1,4 +1,5 @@
 var suits = ["S", "H", "D", "C"];
+var suitNames = {"S": "Spades", "H": "Hearts", "D": "Diamonds", "C": "Clubs"}
 var values = ["7", "8", "9", "10", "J", "Q", "K", "A"];
 var weights = {"J": 11, "Q": 12, "K": 13, "A": 14};
 var deck = new Array();
@@ -366,15 +367,36 @@ function checkPlayableCard(id)
     return playable
 }
 
+function checkAllowedCard(firstCard, newCard, player_id)
+{
+    if (newCard.Suit === firstCard.Suit)
+        return true;
+    // Check if player_id has another card of that suit in remaining cards
+    var hand = players[player_id].Hand;
+    for (var i = 0; i < hand.length; i++){
+        if (hand[i].Suit === firstCard.Suit)
+        {
+            setStatusCheckTrick(player_id, suitNames[firstCard.Suit]);
+            return false;
+        }
+    }
+    return true;
+}
+
 function playCard(id)
 {
     if (!checkPlayableCard(id)) return;
     var card = document.getElementById(id);
     var trick = document.getElementById('trick');
     if (trickCards.length == 0)
-        trick.innerHTML = ''
+        trick.innerHTML = '';
+    else if (trickCards.length == 1)
+        if (!checkAllowedCard(trickCards[0], card.card, card.player)) return;
     trick.appendChild(card);
     trickCards.push(card.card);
+    console.log(players[card.player].Hand.length);
+    players[card.player].Hand = players[card.player].Hand.filter(_card => _card !== card.card);
+    console.log(players[card.player].Hand.length);
     if (trickCards.length == 2) {
         if (checkWon()){
             trick.style.background = '#8cfc70';
@@ -490,6 +512,12 @@ function setStatusTrick(currentPlayer)
     resetActive();
     setActive(currentPlayer);
     document.getElementById('status').innerHTML = `Play Card: ${players[currentPlayer].ID}<br>${players[better].ID} vs ${players[challenger].ID}`;
+    document.getElementById("status").style.display = 'inline-block';
+}
+
+function setStatusCheckTrick(currentPlayer, suitName)
+{
+    document.getElementById('status').innerHTML = `Invalid Card: ${players[currentPlayer].ID}. Please play a ${suitName} card<br>${players[better].ID} vs ${players[challenger].ID}`;
     document.getElementById("status").style.display = 'inline-block';
 }
 
