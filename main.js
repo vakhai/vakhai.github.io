@@ -5,8 +5,8 @@ var deck = new Array();
 var players = new Array();
 var user = null;
 var trickCards = [];
-var deals = 0;
-var dealer = 2;
+var totalPlayers;
+var dealer;
 
 var tricks = null;
 var wonTricks = 0;
@@ -14,10 +14,9 @@ var better = null;
 var challenger = null;
 var maxBet = 0;
 var bets = {};
-var currentBetter = dealer;
+var currentBetter;
 
 var socket;
-var connected;
 var uuid;
 var clients;
 var names;
@@ -112,10 +111,9 @@ function make_challenge_div(player_id)
     var div_challenges = document.createElement('div');
     div_challenges.className = 'challenge-options';
     div_challenges.id = 'challenges_' + player_id;
-    var challenge_1 = make_challenge_button(player_id, (player_id + 1) % 3);
-    var challenge_2 = make_challenge_button(player_id, (player_id + 2) % 3);
-    div_challenges.appendChild(challenge_1);
-    div_challenges.appendChild(challenge_2);
+    for (var i = 1; i < totalPlayers; i++){
+        div_challenges.appendChild(make_challenge_button(player_id, (player_id + i) % totalPlayers));
+    }
     return div_challenges;
 }
 
@@ -130,7 +128,7 @@ function createPlayersUI()
     document.getElementById('players').innerHTML = '';
     for(var j = 0; j < players.length; j++)
     {
-        i = (j + user + 1) % 3 // Start with other users first
+        i = (j + user + 1) % totalPlayers; // Start with other users first
         var div_player = document.createElement('div');
         div_player.id = 'player_' + i;
         div_player.className = 'player';
@@ -209,7 +207,7 @@ function shuffle()
 function startCandy()
 {
     //document.getElementById('btnStart').value = 'Restart';
-    createPlayers(3);
+    createPlayers(totalPlayers);
     createPlayersUI();
     createTrickUI();
     newRound();
@@ -217,9 +215,8 @@ function startCandy()
 
 function newRound()
 {
-    dealer = (dealer + 1) % 3;
+    dealer = (dealer + 1) % totalPlayers;
     currentBetter = dealer;
-    deals = 0;
     createDeck();
     shuffle();
     nextDeal();
@@ -233,17 +230,13 @@ function nextDeal() {
     maxBet = 0;
     bets = {};
     currentBetter = dealer;
-    if (deals < 2)
-        tricks = 4;
-    else if (deals == 2)
-        tricks = 2;
-    else
+    tricks = Math.min(4, Math.floor(deck.length / totalPlayers));
+    if (tricks <= 0)
     {
         newRound();
         return;
     }
     dealHands(tricks);
-    deals += 1;
     setStatusBetting(currentBetter);
 }
 
@@ -294,7 +287,7 @@ function clearTrick()
 {
     var trick = document.getElementById('trick');
     trick.innerHTML = '';
-    trick.style.background = '';
+    trick.style.background = ''
     trickCards = [];
     createTrickUI();
 }
@@ -327,18 +320,19 @@ function doBet(id)
             }
         }
 
-        // document.getElementById('player_' + currentBetter).classList.remove('active');
         // Find next player to bet
-        currentBetter = (currentBetter + 1) % 3;
-        if ((currentBetter in bets) && ((bets[currentBetter] === 0) || (bets[currentBetter] === maxBet)))
+        currentBetter = (currentBetter + 1) % totalPlayers;
+        var skips = 0;
+        while ((currentBetter in bets) && ((bets[currentBetter] === 0) || (bets[currentBetter] === maxBet)))
         {
-            currentBetter = (currentBetter + 1) % 3;
-            if ((currentBetter in bets) && ((bets[currentBetter] === 0) || (bets[currentBetter] === maxBet)))
+            skips += 1;
+            if (skips === (totalPlayers - 1))
             {
                 // None left to bet
                 doneBetting();
                 return
             }
+            currentBetter = (currentBetter + 1) % totalPlayers;
         }
         setStatusBetting(currentBetter);
     }
@@ -368,6 +362,7 @@ function checkPlayableCard(id)
         playable = false;
     else if (trickCards.length >= 2)
         playable = false;
+    console.log(`Playable: ${playable}. id ${id}. cp ${card.player}. better ${better}. challenger ${challenger}.  tl ${trickCards.length}`);
     return playable
 }
 
@@ -390,13 +385,13 @@ function playCard(id)
                 setStatusWinner(better);
                 delay(function(){
                     newRound();
-                }, 4000);
+                }, 3000);
             }
             else {
                 setStatusTrick(better);
                 delay(function(){
                     clearTrick();
-                }, 2000);
+                }, 1500);
             }
         }
         else {
@@ -405,7 +400,7 @@ function playCard(id)
             setStatusWinner(challenger);
             delay(function(){
                 newRound();
-            }, 4000);
+            }, 3000);
         }
     }
     else
@@ -457,7 +452,7 @@ function resetActive(){
 function setStatusConnected(names)
 {
     document.getElementById('gameStatus').style.display = 'block';
-    document.getElementById('status').innerHTML = 'Connected: ' + names.join(', ') + '<br>Waiting for other players';
+    document.getElementById('status').innerHTML = 'Connected: ' + names.join(', ') + `<br>Waiting for other ${totalPlayers-names.length} players`;
     document.getElementById("status").style.display = 'inline-block';
 }
 
@@ -500,11 +495,10 @@ function setStatusTrick(currentPlayer)
 
 function onConnect(msg)
 {
-    connected += 1;
     clients.push(msg.id);
     names.push(msg.name);
     setStatusConnected(names);
-    if (clients.length == 3){
+    if (clients.length === totalPlayers){
         sendReady();
     }
 }
@@ -516,6 +510,7 @@ function sendReady()
         text: "Ready to play!",
         clients: clients,
         names: names,
+        totalPlayers: totalPlayers,
         seed: uuid,
         date: Date.now(),
     };
@@ -528,6 +523,8 @@ function onReady(msg)
 {
     clients = msg.clients;
     names = msg.names;
+    totalPlayers = msg.totalPlayers;
+    dealer = totalPlayers - 1;
     Math.seedrandom(msg.seed);
     console.log("Ready to play! Clients, Names")
     console.log(clients);
@@ -584,12 +581,14 @@ function connect()
 {
     var room = document.getElementById("room").value;
     var name = document.getElementById("name").value;
+    totalPlayers = parseInt(document.getElementById("totalPlayers").value) || 3;
+
     document.getElementById("btnConnect").style.display = 'none';
     document.getElementById("room").style.display = 'none';
+    document.getElementById("totalPlayers").style.display = 'none';
     document.getElementById("name").style.display = 'none';
 
     uuid = make_uuid();
-    connected = 0;
     clients = [];
     names = [];
 
@@ -607,6 +606,7 @@ function connect()
             text: "Connected",
             id: uuid,
             name: name,
+            totalPlayers: totalPlayers,
             date: Date.now()
         };
 
