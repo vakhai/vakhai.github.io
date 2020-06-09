@@ -517,7 +517,7 @@ function setStatusTrick(currentPlayer)
 
 function setStatusCheckTrick(currentPlayer, suitName)
 {
-    document.getElementById('status').innerHTML = `Invalid Card: ${players[currentPlayer].ID}. Please play a ${suitName} card<br>${players[better].ID} vs ${players[challenger].ID}`;
+    document.getElementById('status').innerHTML = `Invalid Card: ${players[currentPlayer].ID}<br>Please play a ${suitName} card<br>${players[better].ID} vs ${players[challenger].ID}`;
     document.getElementById("status").style.display = 'inline-block';
 }
 
