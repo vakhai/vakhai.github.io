@@ -445,14 +445,14 @@ function setStatusConnected(names)
 {
     document.getElementById('gameStatus').style.display = 'block';
     document.getElementById('status').innerHTML = 'Connected: ' + names.join(', ');
-    document.getElementById("status").style.display = 'block';
+    document.getElementById("status").style.display = 'inline-block';
 }
 
 function setStatusWinner(winner)
 {
     resetActive();
     document.getElementById('status').innerHTML = 'Winner: ' + players[winner].ID;
-    document.getElementById("status").style.display = 'block';
+    document.getElementById("status").style.display = 'inline-block';
 }
 
 function setActive(i){
@@ -465,7 +465,7 @@ function setStatusBetting(currentBetter)
     resetActive();
     setActive(currentBetter)
     document.getElementById('status').innerHTML = `Start Betting:  ${players[currentBetter].ID}`;
-    document.getElementById("status").style.display = 'block';
+    document.getElementById("status").style.display = 'inline-block';
     if (currentBetter === user) document.getElementById('bets_' + currentBetter).style.display = 'block'
 }
 
@@ -474,7 +474,7 @@ function setStatusChallenging()
     resetActive();
     setActive(better);
     document.getElementById('status').innerHTML = `Select Challenger: ${players[better].ID}`;
-    document.getElementById("status").style.display = 'block';
+    document.getElementById("status").style.display = 'inline-block';
     if (better == user) document.getElementById('challenges_' + better).style.display = 'block'
 }
 
@@ -483,7 +483,7 @@ function setStatusTrick(currentPlayer)
     resetActive();
     setActive(currentPlayer);
     document.getElementById('status').innerHTML = `Play Card: ${players[currentPlayer].ID}<br>${players[better].ID} vs ${players[challenger].ID}`;
-    document.getElementById("status").style.display = 'block';
+    document.getElementById("status").style.display = 'inline-block';
 }
 
 function onConnect(msg)
