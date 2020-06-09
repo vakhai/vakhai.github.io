@@ -424,7 +424,6 @@ function checkWon()
 function resetActive(){
     for (var i =0; i < players.length; i++){
         document.getElementById('player_' + i).classList.remove('active');
-        document.getElementById('playerinfo_' + i).classList.remove('active');
         document.getElementById('bets_' + i).style.display = "none";
         document.getElementById('challenges_' + i).style.display = "none";
         document.getElementById('playerlabel_' + i).innerHTML = getPlayerLabel(i);
@@ -457,7 +456,6 @@ function setStatusWinner(winner)
 
 function setActive(i){
     document.getElementById('player_' + i).classList.add('active');
-    document.getElementById('playerinfo_' + i).classList.add('active');
 }
 
 function setStatusBetting(currentBetter)

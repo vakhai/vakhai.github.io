@@ -129,7 +129,7 @@ body {
 }
 
 .player.active{
-    /*border: solid 1px #222;*/
+    border: solid 1px #222;
     background: #fff8d4;
 }
 
@@ -138,11 +138,7 @@ body {
     padding: 2%;
     display: inline-block;
     vertical-align: top;
-}
-
-.player-info.active{
-    /*border: solid 1px #222;*/
-    /*background: #fff8d4;*/
+    min-width: 100%;
 }
 
 .other-player-info{
@@ -150,11 +146,6 @@ body {
     padding: 2%;
     display: inline-block;
     vertical-align: top;
-}
-
-.other-player-info.active{
-    /*border: solid 1px #222;*/
-    /*background: #fff8d4;*/
 }
 
 .points{
