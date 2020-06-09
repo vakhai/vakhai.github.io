@@ -3,6 +3,7 @@ var values = ["7", "8", "9", "10", "J", "Q", "K", "A"];
 var weights = {"J": 11, "Q": 12, "K": 13, "A": 14};
 var deck = new Array();
 var players = new Array();
+var user = null;
 var trickCards = [];
 var deals = 0;
 var dealer = 2;
@@ -118,38 +119,62 @@ function make_challenge_div(player_id)
     return div_challenges;
 }
 
+function getPlayerLabel(i)
+{
+    return `${players[i].ID}<br>Score: ${players[i].Points}<br>Bet: ${i in bets ? bets[i] : ""}`;
+
+}
+
 function createPlayersUI()
 {
     document.getElementById('players').innerHTML = '';
-    for(var i = 0; i < players.length; i++)
+    for(var j = 0; j < players.length; j++)
     {
+        i = (j + user + 1) % 3 // Start with other users first
         var div_player = document.createElement('div');
-        if (clients[i] !== uuid)
-            div_player.style.display = 'none'
         div_player.id = 'player_' + i;
         div_player.className = 'player';
 
         var div_playerlabel = document.createElement('div');
-        var div_hand = document.createElement('div');
 
+        var div_playerinfo = document.createElement('div');
+        div_playerinfo.id = 'playerinfo_' + i;
+        if (clients[i] !== uuid)
+            div_playerinfo.className = 'other-player-info';
+        else
+            div_playerinfo.className = 'player-info';
+
+        var div_hand = document.createElement('div');
         var div_bets = make_bet_div(i);
         var div_challenge = make_challenge_div(i);
+        if (clients[i] !== uuid)
+            div_playerinfo.style.display = 'none'
 
         div_playerlabel.id = 'playerlabel_' + i;
-        div_playerlabel.innerHTML = players[i].ID;
+        div_playerlabel.innerHTML = getPlayerLabel(i);
         div_hand.id = 'hand_' + i;
 
         div_bets.style.display = 'none'
         div_challenge.style.display = 'none'
 
         div_player.appendChild(div_playerlabel);
-        div_player.appendChild(div_hand);
-        div_player.appendChild(div_challenge);
-        div_player.appendChild(div_bets);
+        div_playerinfo.appendChild(div_hand);
+        div_playerinfo.appendChild(div_challenge);
+        div_playerinfo.appendChild(div_bets);
 
-        document.getElementById('players').appendChild(div_player);
+        if (clients[i] !== uuid)
+            var parent = document.getElementById('otherPlayers');
+        else
+            var parent = document.getElementById('players');
+        parent.appendChild(div_player);
+        if (clients[i] === uuid) parent.appendChild(document.createElement('br'))
+        parent.appendChild(div_playerinfo);
     }
-    updatePoints();
+}
+
+function createTrickUI()
+{
+    document.getElementById('trick').appendChild(getDummyCard());
 }
 
 function clearPlayers()
@@ -186,6 +211,7 @@ function startCandy()
     //document.getElementById('btnStart').value = 'Restart';
     createPlayers(3);
     createPlayersUI();
+    createTrickUI();
     newRound();
 }
 
@@ -237,6 +263,16 @@ function renderCard(name, card, player_id)
     hand.appendChild(getCardUI(name, card, player_id));
 }
 
+function getDummyCard()
+{
+    var el = document.createElement('div');
+    el.id = 'dummy_card';
+    el.className = 'card';
+    el.innerHTML = `<img src='cards/RED_BACK.svg'>`;
+    el.style.visibility = 'hidden';
+    return el;
+}
+
 function getCardUI(name, card, player_id)
 {
     var el = document.createElement('div');
@@ -253,16 +289,16 @@ function clearTrick()
 {
     var trick = document.getElementById('trick');
     trick.innerHTML = '';
-    trick.style.background = '#f5f5f5';
-    trick.style.display = 'none';
+    trick.style.background = '';
     trickCards = [];
+    createTrickUI();
 }
 
 function doneBetting()
 {
     if (maxBet !== 0)
     {
-        document.getElementById('player_' + better).classList.add('active');
+        setActive(better);
         setStatusChallenging();
     }
     else
@@ -326,6 +362,8 @@ function playCard(id)
         return;
 
     var trick = document.getElementById('trick');
+    if (trickCards.length == 0)
+        trick.innerHTML = ''
     trick.appendChild(card);
     trick.style.display = 'block';
     trickCards.push(card.card);
@@ -366,32 +404,43 @@ function checkWon()
     return ((trickCards[0].Suit != trickCards[1].Suit) || (trickCards[0].Weight > trickCards[1].Weight))
 }
 
-function updatePoints()
-{
-    var scores = ["Scoreboard "];
-    for (var i = 0 ; i < players.length; i++)
-    {
-        scores.push(players[i].ID + ":" + players[i].Points);
-    }
-    document.getElementById('score').innerHTML = scores.join(" ");
-}
+// function updatePoints()
+// {
+//     var scores = ["Scoreboard "];
+//     for (var i = 0 ; i < players.length; i++)
+//     {
+//         scores.push("<br>" + players[i].ID + ":" + players[i].Points);
+//     }
+//     document.getElementById('score').innerHTML = scores.join(" ");
+// }
+//
+// function updatePlayerLabel()
+// {
+//     for (var i = 0 ; i < players.length; i++)
+//     {
+//         document.getElementById('playerlabel_' + i).innerHTML = `{players[i].ID}<br>Score: ${players[i]}.Points<br>Bet: ${i in bets ? bets[i] : ""}`
+//     }
+// }
 
 function resetActive(){
     for (var i =0; i < players.length; i++){
         document.getElementById('player_' + i).classList.remove('active');
+        document.getElementById('playerinfo_' + i).classList.remove('active');
         document.getElementById('bets_' + i).style.display = "none";
         document.getElementById('challenges_' + i).style.display = "none";
+        document.getElementById('playerlabel_' + i).innerHTML = getPlayerLabel(i);
     }
 }
 
-function getBets(){
-    currentBets = ["Bets "]
-    for (var i =0; i < players.length; i++){
-        if (i in bets)
-            currentBets.push(players[i].ID + ":" + bets[i]);
-    }
-    return currentBets
-}
+// function getBets(){
+//     currentBets = ["Bets "]
+//     for (var j = dealer; j < dealer + players.length; j++){
+//         var i = (j % 3);
+//         if (i in bets)
+//             currentBets.push(players[i].ID + ": " + bets[i]);
+//     }
+//     return currentBets
+// }
 
 function setStatusConnected(names)
 {
@@ -402,35 +451,38 @@ function setStatusConnected(names)
 
 function setStatusWinner(winner)
 {
+    resetActive();
     document.getElementById('status').innerHTML = 'Winner: ' + players[winner].ID;
     document.getElementById("status").style.display = 'block';
-    updatePoints();
+}
+
+function setActive(i){
+    document.getElementById('player_' + i).classList.add('active');
+    document.getElementById('playerinfo_' + i).classList.add('active');
 }
 
 function setStatusBetting(currentBetter)
 {
     resetActive();
-    var currentBets = getBets();
-    document.getElementById('player_' + currentBetter).classList.add('active');
-    document.getElementById('status').innerHTML = `Start Betting:  ${players[currentBetter].ID}<br>${currentBets.join(' ')}`;
+    setActive(currentBetter)
+    document.getElementById('status').innerHTML = `Start Betting:  ${players[currentBetter].ID}`;
     document.getElementById("status").style.display = 'block';
-    document.getElementById('bets_' + currentBetter).style.display = 'block'
+    if (currentBetter === user) document.getElementById('bets_' + currentBetter).style.display = 'block'
 }
 
 function setStatusChallenging()
 {
     resetActive();
-    var currentBets = getBets();
-    document.getElementById('player_' + better).classList.add('active');
-    document.getElementById('status').innerHTML = `Select Challenger: ${players[better].ID}<br>${currentBets.join(' ')}`;
+    setActive(better);
+    document.getElementById('status').innerHTML = `Select Challenger: ${players[better].ID}`;
     document.getElementById("status").style.display = 'block';
-    document.getElementById('challenges_' + better).style.display = 'block'
+    if (better == user) document.getElementById('challenges_' + better).style.display = 'block'
 }
 
 function setStatusTrick(currentPlayer)
 {
     resetActive();
-    document.getElementById('player_' + currentPlayer).classList.add('active');
+    setActive(currentPlayer);
     document.getElementById('status').innerHTML = `Play Card: ${players[currentPlayer].ID}<br>${players[better].ID} vs ${players[challenger].ID}`;
     document.getElementById("status").style.display = 'block';
 }
@@ -469,6 +521,11 @@ function onReady(msg)
     console.log("Ready to play! Clients, Names")
     console.log(clients);
     console.log(names);
+    for (var i = 0; i < clients.length; i++)
+    {
+        if (clients[i] === uuid)
+            user = i;
+    }
     var gameStart = document.getElementById("gameStart");
     gameStart.style.display = "none";
     var gameBody = document.getElementById("gameBody");

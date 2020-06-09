@@ -28,12 +28,12 @@ img {
     border:none;
     padding: 10px 30px;
     border-radius: 10px;
-    cursor:pointer;
     margin: 5px;
     outline: none;
 }
 
 .btn:hover{
+    cursor:pointer;
     background:dodgerblue;
 }
 
@@ -57,7 +57,7 @@ img {
 
 .game .game-body
 {
-    padding: 20px;
+    padding-bottom: 20px;
     display: none;
 }
 
@@ -81,9 +81,11 @@ img {
     border: solid 1px black;
     display: inline-block;
     border-radius: 5px;
-    font-size: 10pt;
-    text-align: center;
-    margin: 3px;
+    margin: 7px;
+}
+
+.game .card:hover{
+    cursor:pointer;
 }
 
 .game .status
@@ -103,20 +105,51 @@ img {
     text-align: center;
 }
 
+.other-players{
+    margin: 0 auto;
+    text-align: center;
+}
+
 .player{
-    width: 80%;
+    border-radius: 10px;
     max-width: 480px;
     border: solid 1px #f5f5f5;
-    border-radius: 10px;
-    padding: 10px;
+    padding: 3%;
     display: inline-block;
-    margin:1%;
+    margin: 3%;
     vertical-align: top;
     background:#f5f5f5;
 }
 
 .player.active{
-    border: solid 1px #222;
+    /*border: solid 1px #222;*/
+    background: #fff8d4;
+}
+
+.player-info{
+    border-radius: 10px;
+    padding: 2%;
+    max-width: 75%;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.player-info.active{
+    /*border: solid 1px #222;*/
+    background: #fff8d4;
+}
+
+.other-player-info{
+    border-radius: 10px;
+    padding: 2%;
+    max-width: 75%;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.other-player-info.active{
+    /*border: solid 1px #222;*/
+    background: #fff8d4;
 }
 
 .points{
@@ -137,12 +170,8 @@ img {
 
 .trick{
     border-radius: 10px;
-    padding: 10px;
     display: inline-block;
-    margin: auto;
     vertical-align: top;
-    background:#f5f5f5;
-    display: none;
-    width: 80%;
-    max-width: 480px;
+    max-width: 75%;
+    margin: 0 auto;
 }
