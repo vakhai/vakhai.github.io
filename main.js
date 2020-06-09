@@ -235,8 +235,13 @@ function nextDeal() {
     currentBetter = dealer;
     if (deals < 2)
         tricks = 4;
-    else
+    else if (deals == 2)
         tricks = 2;
+    else
+    {
+        newRound();
+        return;
+    }
     dealHands(tricks);
     deals += 1;
     setStatusBetting(currentBetter);
