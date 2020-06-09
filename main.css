@@ -3,10 +3,14 @@ img {
     max-height: 100%;
 }
 
+body {
+    font-size: 75%;
+}
+
 .game
 {
     width: 100%;
-    max-width: 1080px;
+    max-width: 640px;
     border: solid 1px #ddd;
     margin: 0 auto;
     background: #0000ff4d;
@@ -46,13 +50,13 @@ img {
 
 .game .game-status
 {
-    padding-top: 20px;
+    padding-top: 2%;
     display: none;
 }
 
 .game .game-start
 {
-    padding: 20px;
+    padding: 2%;
 }
 
 .game .game-body
@@ -82,6 +86,8 @@ img {
     display: inline-block;
     border-radius: 5px;
     margin: 7px;
+    margin-left: -20px;
+    margin-right: -20px;
 }
 
 .game .card:hover{
@@ -136,7 +142,7 @@ img {
 
 .player-info.active{
     /*border: solid 1px #222;*/
-    background: #fff8d4;
+    /*background: #fff8d4;*/
 }
 
 .other-player-info{
@@ -149,7 +155,7 @@ img {
 
 .other-player-info.active{
     /*border: solid 1px #222;*/
-    background: #fff8d4;
+    /*background: #fff8d4;*/
 }
 
 .points{
@@ -171,7 +177,7 @@ img {
 .trick{
     border-radius: 10px;
     padding: 2%;
-    max-width: 75%;
+    min-width: 70%;
     display: inline-block;
     vertical-align: top;
     margin: 0 auto;
