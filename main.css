@@ -5,15 +5,16 @@ img {
 
 body {
     font-size: 75%;
+    background: #0000ff4d;
+    display: flex;
+    align-items: center;
 }
 
 .game
 {
     width: 100%;
     max-width: 640px;
-    border: solid 1px #ddd;
     margin: 0 auto;
-    background: #0000ff4d;
     border-radius: 10px;
     text-align:center;
 }
@@ -30,7 +31,7 @@ body {
     background:#222;
     color:white;
     border:none;
-    padding: 10px 30px;
+    padding: 10px 20px;
     border-radius: 10px;
     margin: 5px;
     outline: none;
@@ -135,7 +136,6 @@ body {
 .player-info{
     border-radius: 10px;
     padding: 2%;
-    max-width: 75%;
     display: inline-block;
     vertical-align: top;
 }
@@ -148,7 +148,6 @@ body {
 .other-player-info{
     border-radius: 10px;
     padding: 2%;
-    max-width: 75%;
     display: inline-block;
     vertical-align: top;
 }
