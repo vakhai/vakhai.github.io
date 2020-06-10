@@ -132,7 +132,7 @@ function createPlayersUI()
         i = (j + user + 1) % totalPlayers; // Start with other users first
         var div_player = document.createElement('div');
         div_player.id = 'player_' + i;
-        div_player.className = 'player';
+        div_player.className = 'player medium-copy';
 
         var div_playerlabel = document.createElement('div');
 
@@ -562,8 +562,7 @@ function onReady(msg)
         if (clients[i] === uuid)
             user = i;
     }
-    var gameStart = document.getElementById("gameStart");
-    gameStart.style.display = "none";
+
     var gameBody = document.getElementById("gameBody");
     gameBody.style.display = "block";
     startCandy();
@@ -610,11 +609,9 @@ function connect()
     var room = document.getElementById("room").value;
     var name = document.getElementById("name").value;
     totalPlayers = parseInt(document.getElementById("totalPlayers").value) || 3;
-
-    document.getElementById("btnConnect").style.display = 'none';
-    document.getElementById("room").style.display = 'none';
-    document.getElementById("totalPlayers").style.display = 'none';
-    document.getElementById("name").style.display = 'none';
+    
+    var gameStart = document.getElementById("gameStart");
+    gameStart.style.display = "none";
 
     uuid = make_uuid();
     clients = [];
