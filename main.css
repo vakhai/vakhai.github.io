@@ -13,7 +13,7 @@ body {
 .game
 {
     width: 100%;
-    max-width: 640px;
+    max-width: 480px;
     margin: 0 auto;
     border-radius: 10px;
     text-align:center;
@@ -97,7 +97,7 @@ body {
 
 .game .status
 {
-    width: 72%;
+    width: 75%;
     max-width: 480px;
     background: #fff8d4;
     border-radius: 10px;
